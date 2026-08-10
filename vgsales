@@ -1,81 +1,66 @@
-SELECT
-  *
-FROM
-  `portofolio-502700.vgsales.gamesales`;
-
-
-#TOP 10 GAME TERLARIS 
-SELECT
-  Rank,
-  Name,
-  Platform,
-  Year,
-  Genre,
-  Publisher,
-  Global_Sales
+SELECT *
 FROM `portofolio-502700.vgsales.gamesales`
-ORDER BY `Global_Sales` DESC
-LIMIT 10;
+WHERE Year is not null
+ORDER BY Year desc
+LIMIT 1000;
 
-#TOTAL PENJUALAN PER REGION
-SELECT
-  'North America' as Region,
-  ROUND(SUM(`NA_Sales` ), 2) as Total_Penjualan_Juta
+#Platform apa yang total penjualannya paling laris
+SELECT Platform,
+SUM(Global_Sales) AS Total_Penjualan_Juta
 FROM `portofolio-502700.vgsales.gamesales`
-
-UNION ALL
-
-SELECT
-  'Europe' as Region,
-  ROUND(SUM(`EU_Sales`), 2) as Total_Penjualan_Juta
-FROM `portofolio-502700.vgsales.gamesales`
-
-UNION ALL
-
-SELECT
-  'Japan' as Region,
-  ROUND(SUM(`JP_Sales`), 2) as Total_Penjualan_Juta
-FROM `portofolio-502700.vgsales.gamesales`
-
-UNION ALL
-
-SELECT
-  'Other' as Region,
-  ROUND(SUM(`Other_Sales`), 2) as Total_Penjualan_Juta
-FROM `portofolio-502700.vgsales.gamesales`
-
-ORDER BY Total_Penjualan_Juta DESC;
-
-#TOP 10 PUBLISHER TERLARIS
-SELECT
-  `publisher` as Publisher,
-  ROUND(SUM(`global_sales`), 2) as Total_Penjualan_Juta,
-  COUNT(`name`) as Jumlah_Game
-FROM `portofolio-502700.vgsales.gamesales`
-WHERE `publisher` != 'N/A'
-GROUP BY `publisher`
+GROUP BY Platform
 ORDER BY Total_Penjualan_Juta DESC
-LIMIT 10;
+LIMIT 5; 
 
-#PENJUALAN PER GENRE
-SELECT
-  `Genre`,
-  ROUND(SUM(`global_sales`), 2) as Total_Penjualan_Juta,
-  COUNT(`name`) as Jumlah_Game
+#5 Genre paling laku 2000 - 2020
+SELECT Genre, 
+SUM(Global_Sales) AS Total_Penjualan_Juta,
+COUNT(Name) AS Jumlah_Game
 FROM `portofolio-502700.vgsales.gamesales`
-WHERE `genre` != 'N/A'
-GROUP BY `genre`
-ORDER BY Total_Penjualan_Juta DESC;
+WHERE Year BETWEEN '2000' AND '2020'
+GROUP BY Genre
+ORDER BY Total_Penjualan_Juta DESC
+LIMIT 5; 
 
-#TREN PENJUALAN PER TAHUN + PLATFORM
+#Berapa persen kontribusi penjualan NA, EU, JP, dan Other terhadap Global_Sales?
 SELECT
-  SAFE_CAST(`year` AS INT64) as Tahun,
-  `platform` as Platform,
-  ROUND(SUM(`global_sales`), 2) as Total_Penjualan_Juta
+SUM(NA_Sales) AS Total_NA, 
+SUM(EU_Sales) AS Total_EU,
+SUM(JP_Sales) AS Total_JP,
+SUM(Other_Sales) AS Total_Other,
+SUM(Global_Sales) AS Total_Penjualan_Juta,
+
+ROUND(100 * SUM(NA_Sales) / SUM(Global_Sales),2) AS Persen_NA_Sales,
+ROUND(100 * SUM(EU_Sales) / SUM(Global_Sales) ,2) AS Persen_EU_Sales,
+ROUND(100 * SUM(JP_Sales) / SUM(Global_Sales) ,2) AS Persen_JP_Sales,
+ROUND(100 * SUM(Other_Sales) / SUM(Global_Sales) ,2) AS Persen_Other_Sales
+
+FROM `portofolio-502700.vgsales.gamesales`;
+
+#"Publisher mana yang punya rata-rata penjualan per game paling tinggi?"
+SELECT Publisher,
+COUNT(Name) AS Jumlah_Game,
+ROUND(SUM(Global_Sales),2) AS Total_Penjualan_Juta,
+ROUND(AVG(Global_Sales),2) AS Rata_Rata_Penjualan_Juta
 FROM `portofolio-502700.vgsales.gamesales`
-WHERE `year` != 'N/A' 
-  AND `year` != ''  
-  AND SAFE_CAST(`year` AS INT64) IS NOT NULL  
-GROUP BY Tahun, `platform`
-ORDER BY Total_Penjualan_Juta DESC;
+WHERE Publisher is not null
+AND Global_Sales > 0
+GROUP BY Publisher
+HAVING COUNT(Name) >=10
+ORDER BY Rata_rata_Penjualan_juta DESC
+LIMIT 10; #"Rata2 1 game Nintendo laku 2.5 juta copy. Ini 2x lipat dari rata2 industri. Kualitas > Kuantitas"
+
+#Gimana tren penjualan global dari tahun ke tahun? Tahun mana puncak dan tahun mana paling anjlok?
+SELECT 
+  SAFE_CAST(Year AS INT64) AS Tahun,
+  ROUND(SUM(Global_Sales),2) AS Total_Penjualan_juta,
+  COUNT(Name) AS Jumlah_game
+FROM `portofolio-502700.vgsales.gamesales`
+  WHERE SAFE_CAST(Year AS INT64) is not null
+  AND SAFE_CAST(Year AS INT64) BETWEEN 1990 AND 2016
+GROUP BY Tahun 
+ORDER BY Tahun ASC; #"Analisa 27 tahun data game: Puncak industri 2008 dengan 677 juta copy terjual. 8 tahun kemudian turun 90% ke 70 juta karena disrupsi digital & mobile.
+
+
+
 
