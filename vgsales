@@ -1,0 +1,81 @@
+SELECT
+  *
+FROM
+  `portofolio-502700.vgsales.gamesales`;
+
+
+#TOP 10 GAME TERLARIS 
+SELECT
+  Rank,
+  Name,
+  Platform,
+  Year,
+  Genre,
+  Publisher,
+  Global_Sales
+FROM `portofolio-502700.vgsales.gamesales`
+ORDER BY `Global_Sales` DESC
+LIMIT 10;
+
+#TOTAL PENJUALAN PER REGION
+SELECT
+  'North America' as Region,
+  ROUND(SUM(`NA_Sales` ), 2) as Total_Penjualan_Juta
+FROM `portofolio-502700.vgsales.gamesales`
+
+UNION ALL
+
+SELECT
+  'Europe' as Region,
+  ROUND(SUM(`EU_Sales`), 2) as Total_Penjualan_Juta
+FROM `portofolio-502700.vgsales.gamesales`
+
+UNION ALL
+
+SELECT
+  'Japan' as Region,
+  ROUND(SUM(`JP_Sales`), 2) as Total_Penjualan_Juta
+FROM `portofolio-502700.vgsales.gamesales`
+
+UNION ALL
+
+SELECT
+  'Other' as Region,
+  ROUND(SUM(`Other_Sales`), 2) as Total_Penjualan_Juta
+FROM `portofolio-502700.vgsales.gamesales`
+
+ORDER BY Total_Penjualan_Juta DESC;
+
+#TOP 10 PUBLISHER TERLARIS
+SELECT
+  `publisher` as Publisher,
+  ROUND(SUM(`global_sales`), 2) as Total_Penjualan_Juta,
+  COUNT(`name`) as Jumlah_Game
+FROM `portofolio-502700.vgsales.gamesales`
+WHERE `publisher` != 'N/A'
+GROUP BY `publisher`
+ORDER BY Total_Penjualan_Juta DESC
+LIMIT 10;
+
+#PENJUALAN PER GENRE
+SELECT
+  `Genre`,
+  ROUND(SUM(`global_sales`), 2) as Total_Penjualan_Juta,
+  COUNT(`name`) as Jumlah_Game
+FROM `portofolio-502700.vgsales.gamesales`
+WHERE `genre` != 'N/A'
+GROUP BY `genre`
+ORDER BY Total_Penjualan_Juta DESC;
+
+#TREN PENJUALAN PER TAHUN + PLATFORM
+SELECT
+  SAFE_CAST(`year` AS INT64) as Tahun,
+  `platform` as Platform,
+  ROUND(SUM(`global_sales`), 2) as Total_Penjualan_Juta
+FROM `portofolio-502700.vgsales.gamesales`
+WHERE `year` != 'N/A' 
+  AND `year` != ''  
+  AND SAFE_CAST(`year` AS INT64) IS NOT NULL  
+GROUP BY Tahun, `platform`
+ORDER BY Total_Penjualan_Juta DESC;
+
